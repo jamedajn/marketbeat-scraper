@@ -1,10 +1,12 @@
 import puppeteer from 'puppeteer';
-const stock = "AAPL"
+const stocks = ["NVDA", "AAPL", "GOOG", "MSFT", "NFLX", "GOOGL"]
 const wait = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
 (async () => {
   const browser = await puppeteer.launch({
     headless: "new"
   });
+  var result = {};
+  for(let stock of stocks) {
   const page = await browser.newPage();
 
   await page.goto(`https://www.marketbeat.com/stocks/NASDAQ/${stock}/`);
@@ -20,12 +22,17 @@ const wait = (time) => new Promise((resolve) => setTimeout(() => resolve(), time
   await historicalPage.waitForSelector('.top-label-wrapper input');
   await historicalPage.evaluate(`document.getElementById("cphPrimaryContent_cphTabContent_txtRatingStartDate").value = "${data}" `)
   await historicalPage.evaluate("__doPostBack('ctl00$ctl00$cphPrimaryContent$cphTabContent$txtRatingStartDate')")
-  await wait(3000)
+  await wait(1000)
   const all = await historicalPage.evaluate(`[...document.querySelector("table#history-table tbody").childNodes].map(element => element?.childNodes[5]?.innerHTML)`);
   const filter = all.filter(e => e.length > 0).map(e => e.includes("➝") ? e.split("➝ ")[1].slice(1) : e.slice(1))
-  console.log(median(filter), filter)
-  await historicalPage.screenshot({ path: 'example.png', fullPage: true, omitBackground: true });
+  result[stock] = {
+    "MATP": "$" + Number(median(filter)).toFixed(2),
+    "MBP": "$" + Number(median(filter) * 0.8695).toFixed(2)
+  }
+//  await historicalPage.screenshot({ path: 'example.png', fullPage: true, omitBackground: true });
+}
   await browser.close();
+  console.log(result)
 })();
 
 function median(arr){
