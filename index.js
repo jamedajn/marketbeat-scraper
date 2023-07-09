@@ -1,6 +1,9 @@
 import puppeteer from 'puppeteer';
 const stocks = ["NVDA", "AAPL", "GOOG", "MSFT", "NFLX", "GOOGL"]
 const wait = (time) => new Promise((resolve) => setTimeout(() => resolve(), time));
+Number.prototype.zeroPad = function() {
+  return ('0'+this).slice(-2);
+};
 (async () => {
   const browser = await puppeteer.launch({
     headless: "new"
@@ -11,7 +14,8 @@ const wait = (time) => new Promise((resolve) => setTimeout(() => resolve(), time
 
   await page.goto(`https://www.marketbeat.com/stocks/NASDAQ/${stock}/`);
   await page.waitForSelector('div dt');
-  const data = await page.evaluate(`[...document.querySelectorAll("div dt")].find(type => type.innerHTML == "Last Earnings").nextElementSibling.textContent`);
+  var data = await page.evaluate(`[...document.querySelectorAll("div dt")].find(type => type.innerHTML == "Last Earnings").nextElementSibling.textContent`);
+  data = `${data.split("/")[0]}/${Number(Number(data.split("/")[1])+1).zeroPad()}/${data.split("/")[2]}`
   const historicalPage = await browser.newPage();
   await historicalPage.setViewport({
     width: 980,
